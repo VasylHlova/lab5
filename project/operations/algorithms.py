@@ -240,8 +240,7 @@ def polygons_intersect(poly1: List[Tuple[float, float]], poly2: List[Tuple[float
         True if polygons intersect, False otherwise
     """
     # Check if any vertex of one polygon is inside the other
-    if any(ShapeUtils.is_point_inside_polygon(p, poly2) for p in poly1) or \
-       any(ShapeUtils.is_point_inside_polygon(p, poly1) for p in poly2):
+    if any(ShapeUtils.is_point_inside_polygon(p, poly2) for p in poly1) or any(ShapeUtils.is_point_inside_polygon(p, poly1) for p in poly2):
         return True
 
     # Check if any edges intersect

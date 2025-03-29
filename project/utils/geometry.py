@@ -1,5 +1,6 @@
 from typing import List, Tuple, Optional, Union
-from shapes.primitives import Circle, Rectangle, Triangle  # Fixed typo from Triangel
+from shapes.primitives import Circle, Rectangle, Triangle
+import math  
 
 import sys
 import os
@@ -75,41 +76,77 @@ class ShapeUtils:
         return max(0, distance - circle.radius)
     
     @staticmethod
-    def is_point_inside_polygon(point: Tuple[float, float], polygon: List[Tuple[float, float]]) -> bool:
-        """
-        Checks if a point is inside a polygon.
-        
-        Args:
-            point: The (x, y) coordinates of the point
-            polygon: List of polygon vertices [(x1, y1), (x2, y2), ...]
-            
-        Returns:
-            True if the point is inside the polygon, False otherwise
-        """
-        x, y = point
+    def is_point_inside_polygon_way1(point: Tuple[float, float], polygon: List[Tuple[float, float]]) -> bool:
+        total_angle = 0
         n = len(polygon)
-        inside = False
-
-        for i in range(n):
-            x1, y1 = polygon[i]
-            x2, y2 = polygon[(i + 1) % n] 
-
-            if ((y1 > y) != (y2 > y)) and (x < (x2 - x1) * (y - y1) / (y2 - y1) + x1):
-                inside = True
-
-        return inside
+        epsolon = 1e-6
+        for i in range(n-1):
+            current_vertex = polygon[i]
+            next_vertex = polygon[(i+1)%n]
+            
+            vector1 = (point[0]-current_vertex[0], point[1]-current_vertex[1])
+            vector2 = (point[0]-next_vertex[0], point[1]-next_vertex[1])
+            
+            len1  = math.sqrt(vector1[0]**2 + vector1[1]**2)
+            len2 = math.sqrt(vector2[0]**2 + vector2[1]**2)
+            
+            if len1 == 0 or len2 == 0:
+                return True
+            
+            dot = vector1[0]*vector2[0] + vector1[1]*vector2[1]
+            
+            cosin_angle = dot/(len1*len2)
+            if abs(cosin_angle) > 1 :
+                cosin_angle = 1 if cosin_angle > 1 else -1     
+            angle = math.acos(cosin_angle)
+            
+            cross = vector1[0] * vector2[1] - vector1[1] * vector2[0]
+            if cross < 0:
+                angle = -angle
+             
+            total_angle += angle   
+        
+        if abs(total_angle) >= (math.pi - epsolon):
+            return True
+        else: 
+            return False    
+                       
+            
+            
+    @staticmethod
+    def is_point_inside_polygon_way2(point: Tuple[float, float], polygon: List[Tuple[float, float]]) -> bool:
+        n = len(polygon)
+        sign = None
+        
+        for  i in range(n-1):
+            current_vertex = polygon[i]
+            next_vertex = polygon[(i+1)%n]
+            
+            edge_vector = (current_vertex[0] - next_vertex[0], current_vertex[1]-next_vertex[1])
+            point_vector = (point[0]-current_vertex[0], point[1] - current_vertex[1])
+            
+            cross_product = edge_vector[0]*point_vector[1] - edge_vector[1]*point_vector[0]
+            
+            if cross_product == 0:
+                continue
+            if sign is None:
+                sign = (cross_product>0)
+            else:
+                if (cross_product > 0 ) != sign:
+                    return False    
+        return True    
     
     @staticmethod
-    def line_intersects(p1: Tuple[float, float], p2: Tuple[float, float], 
-                       q1: Tuple[float, float], q2: Tuple[float, float]) -> bool:
+    def line_intersects(line1_p1: Tuple[float, float], line1_p2: Tuple[float, float], 
+                       line2_p1: Tuple[float, float], line2_p2: Tuple[float, float]) -> bool:
         """
-        Checks if two line segments (p1, p2) and (q1, q2) intersect.
+        Checks if two line segments (p1, p2) and (p1, p2) intersect.
         
         Args:
-            p1: First point of the first line segment
-            p2: Second point of the first line segment
-            q1: First point of the second line segment
-            q2: Second point of the second line segment
+            line1_p1: First point of the first line segment
+            line1_p2: Second point of the first line segment
+            line2_p1: First point of the second line segment
+            line2_p2: Second point of the second line segment
             
         Returns:
             True if the line segments intersect, False otherwise
@@ -120,10 +157,10 @@ class ShapeUtils:
         def direction(a: Tuple[float, float], b: Tuple[float, float], c: Tuple[float, float]) -> float:
             return cross_product((c[0] - a[0], c[1] - a[1]), (b[0] - a[0], b[1] - a[1]))
 
-        d1 = direction(p1, p2, q1)
-        d2 = direction(p1, p2, q2)
-        d3 = direction(q1, q2, p1)
-        d4 = direction(q1, q2, p2)
+        d1 = direction(line1_p1, line1_p2, line2_p1)
+        d2 = direction(line1_p1, line1_p2, line2_p2)
+        d3 = direction(line2_p1, line2_p2, line1_p1)
+        d4 = direction(line2_p1, line2_p2, line1_p2)
 
         return (d1 * d2 < 0 and d3 * d4 < 0)
     

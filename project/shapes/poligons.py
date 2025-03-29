@@ -31,12 +31,13 @@ class Polygon(Shape, Movable, Rotatable):
         Raises:
             ValueError: If polygon has fewer than 3 vertices
         """
-        if len(self.vertices) < 3:
+        n = len(self.vertices)
+        if n < 3:
             raise ValueError('Polygon must have at least 3 vertices')
         p = 0
         for i in range(len(self.vertices)):
             x1, y1 = self.vertices[i]
-            x2, y2 = self.vertices[(i + 1) % len(self.vertices)]  
+            x2, y2 = self.vertices[(i + 1) % n]  
             p += math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) 
         return p
     
@@ -47,7 +48,8 @@ class Polygon(Shape, Movable, Rotatable):
         Returns:
             Area of the polygon
         """
-        s = abs(sum([self.vertices[i][0] * self.vertices[(i+1) % len(self.vertices)][1] -  self.vertices[i][1] * self.vertices[(i+1) % len(self.vertices)][0] for i in range(len(self.vertices))])) / 2
+        n = len(self.vertices)
+        s = abs(sum([self.vertices[i][0] * self.vertices[(i+1) % n][1] -  self.vertices[i][1] * self.vertices[(i+1) % n][0] for i in range(len(self.vertices))])) / 2
         return s
     
     def _calculate_centroid(self) -> Tuple[float, float]:
