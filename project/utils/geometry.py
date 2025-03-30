@@ -79,37 +79,41 @@ class ShapeUtils:
     def is_point_inside_polygon_way1(point: Tuple[float, float], polygon: List[Tuple[float, float]]) -> bool:
         total_angle = 0
         n = len(polygon)
-        epsolon = 1e-6
-        for i in range(n-1):
+        epsilon = 1e-6
+        print(f"Testing point {point} with polygon of {n} vertices")
+        print(f"Polygon vertices: {polygon}")
+        
+        for i in range(n):  # Change from n-1 to n to process all vertices
             current_vertex = polygon[i]
             next_vertex = polygon[(i+1)%n]
             
             vector1 = (point[0]-current_vertex[0], point[1]-current_vertex[1])
             vector2 = (point[0]-next_vertex[0], point[1]-next_vertex[1])
             
-            len1  = math.sqrt(vector1[0]**2 + vector1[1]**2)
+            len1 = math.sqrt(vector1[0]**2 + vector1[1]**2)
             len2 = math.sqrt(vector2[0]**2 + vector2[1]**2)
             
             if len1 == 0 or len2 == 0:
+                print(f"Point is on vertex {current_vertex or next_vertex}")
                 return True
             
             dot = vector1[0]*vector2[0] + vector1[1]*vector2[1]
             
             cosin_angle = dot/(len1*len2)
-            if abs(cosin_angle) > 1 :
+            if abs(cosin_angle) > 1:
                 cosin_angle = 1 if cosin_angle > 1 else -1     
             angle = math.acos(cosin_angle)
             
             cross = vector1[0] * vector2[1] - vector1[1] * vector2[0]
             if cross < 0:
                 angle = -angle
-             
-            total_angle += angle   
+                
+            total_angle += angle
+            print(f"Edge {i}: {current_vertex}->{next_vertex}, Angle: {angle:.4f}, Total: {total_angle:.4f}")
         
-        if abs(total_angle) >= (math.pi - epsolon):
-            return True
-        else: 
-            return False    
+        result = abs(abs(total_angle) - 2*math.pi) < epsilon
+        print(f"Final total: {total_angle:.4f}, Diff from 2π: {abs(abs(total_angle) - 2*math.pi):.8f}, Inside: {result}")
+        return result
                        
             
             

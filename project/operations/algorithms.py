@@ -219,12 +219,12 @@ def search_shapes_by_position(map: Map, x: float, y: float) -> List[Shape]:
         elif isinstance(shape, Triangle):
             # Use ShapeUtils to convert to vertices and check
             vertices = ShapeUtils.shape_to_vertices(shape)
-            if vertices and ShapeUtils.is_point_inside_polygon((x, y), vertices):
+            if vertices and ShapeUtils.is_point_inside_polygon_way1((x, y), vertices):
                 result.append(shape)
                 
         elif isinstance(shape, Polygon):
             # Polygon already has vertices
-            if hasattr(shape, 'vertices') and ShapeUtils.is_point_inside_polygon((x, y), shape.vertices):
+            if hasattr(shape, 'vertices') and ShapeUtils.is_point_inside_polygon_way1((x, y), shape.vertices):
                 result.append(shape)
     
     return result
@@ -240,7 +240,7 @@ def polygons_intersect(poly1: List[Tuple[float, float]], poly2: List[Tuple[float
         True if polygons intersect, False otherwise
     """
     # Check if any vertex of one polygon is inside the other
-    if any(ShapeUtils.is_point_inside_polygon(p, poly2) for p in poly1) or any(ShapeUtils.is_point_inside_polygon(p, poly1) for p in poly2):
+    if any(ShapeUtils.is_point_inside_polygon_way2(p, poly2) for p in poly1) or any(ShapeUtils.is_point_inside_polygon_way2(p, poly1) for p in poly2):
         return True
 
     # Check if any edges intersect

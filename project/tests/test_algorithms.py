@@ -11,8 +11,102 @@ from operations.algorithms import (
     search_shapes_by_area, search_shapes_by_position, polygons_intersect
 )
 from shapes.primitives import Triangle, Rectangle, Circle
-from shapes.poligons import Polygon
 from utils.geometry import ShapeUtils
+
+class TestShapeUtils(unittest.TestCase):
+    """Test cases for the ShapeUtils utility class."""
+    
+    def setUp(self):
+        self.rectangle = Rectangle(5, 3, 1, 2, 0)
+        self.triangle = Triangle(5, 4, 3, 5, 45, 0) 
+        self.circle = Circle(3, 4, 4, 0)
+    
+    def test_shape_to_vertices_rectangle(self):
+        """Test converting a rectangle to vertices."""
+        vertices = ShapeUtils.shape_to_vertices(self.rectangle)
+        expected = [(1, 2), (6, 2), (6, 5), (1, 5)]
+        self.assertEqual(vertices, expected)
+        
+    def test_shape_to_vertices_unsupported(self):
+        """Test converting an unsupported shape returns None."""
+        vertices = ShapeUtils.shape_to_vertices(self.circle)
+        self.assertIsNone(vertices)
+    
+    def test_circle_rectangle_intersection_overlapping(self):
+        """Test detecting intersection between circle and rectangle."""
+        rect = Rectangle(4, 4, 3, 3, 0)
+        self.assertTrue(ShapeUtils.circle_rectangle_intersection(self.circle, rect))
+    
+    def test_circle_rectangle_intersection_non_overlapping(self):
+        """Test detecting non-intersection between circle and rectangle."""
+        rect = Rectangle(4, 4, 10, 10, 0)
+        self.assertFalse(ShapeUtils.circle_rectangle_intersection(self.circle, rect))
+    
+    def test_circle_rectangle_intersection_touching(self):
+        """Test detecting when circle touches rectangle edge."""
+        # Circle at (4,4) with radius 3, rectangle at (7,4) with width 4
+        rect = Rectangle(4, 4, 7, 4, 0)
+        self.assertTrue(ShapeUtils.circle_rectangle_intersection(self.circle, rect))
+    
+    def test_circle_rectangle_distance_overlapping(self):
+        """Test distance between overlapping shapes is 0."""
+        rect = Rectangle(4, 4, 3, 3, 0)
+        self.assertEqual(ShapeUtils.circle_rectangle_distance(self.circle, rect), 0)
+    
+    def test_circle_rectangle_distance_non_overlapping(self):
+        """Test distance between non-overlapping shapes."""
+        # Circle at (4,4) with radius 3, rectangle at (10,10) with width/height 2
+        rect = Rectangle(2, 2, 10, 10, 0)
+        # Closest distance from rectangle (10,10) to circle center (4,4) is sqrt(72) = 8.485...
+        # Minus radius 3 = 5.485...
+        expected_distance = math.sqrt(72) - 3
+        self.assertAlmostEqual(ShapeUtils.circle_rectangle_distance(self.circle, rect), expected_distance)
+    
+    def test_is_point_inside_polygon_way1(self):
+        """Test if point is inside polygon using angle method."""
+        polygon = [(0, 0), (10, 0), (10, 10), (0, 10)]  # Square
+        self.assertTrue(ShapeUtils.is_point_inside_polygon_way1((5, 5), polygon))
+        self.assertFalse(ShapeUtils.is_point_inside_polygon_way1((15, 15), polygon))
+        
+        # Test point on vertex
+        self.assertTrue(ShapeUtils.is_point_inside_polygon_way1((0, 0), polygon))
+        
+        # Test concave polygon
+        concave = [(0, 0), (10, 0), (10, 10), (5, 5), (0, 10)]
+        self.assertTrue(ShapeUtils.is_point_inside_polygon_way1((2, 2), concave))
+        self.assertFalse(ShapeUtils.is_point_inside_polygon_way1((11, 11), concave))
+    
+    def test_is_point_inside_polygon_way2(self):
+        """Test if point is inside polygon using cross product method."""
+        polygon = [(0, 0), (10, 0), (10, 10), (0, 10)]  # Square
+        self.assertTrue(ShapeUtils.is_point_inside_polygon_way2((5, 5), polygon))
+        self.assertFalse(ShapeUtils.is_point_inside_polygon_way2((15, 15), polygon))
+        
+        # Test point on edge
+        self.assertTrue(ShapeUtils.is_point_inside_polygon_way2((5, 0), polygon))
+        
+        # Test concave polygon
+        concave = [(0, 0), (10, 0), (10, 10), (5, 5), (0, 10)]
+        self.assertTrue(ShapeUtils.is_point_inside_polygon_way2((2, 2), concave))
+        self.assertFalse(ShapeUtils.is_point_inside_polygon_way2((6, 6), concave))
+    
+    def test_line_intersects(self):
+        """Test line intersection detection."""
+        # Intersecting lines
+        self.assertTrue(ShapeUtils.line_intersects((0, 0), (10, 10), (0, 10), (10, 0)))
+        
+        # Non-intersecting lines
+        self.assertFalse(ShapeUtils.line_intersects((0, 0), (5, 5), (6, 6), (10, 10)))
+        
+        # Parallel lines
+        self.assertFalse(ShapeUtils.line_intersects((0, 0), (5, 0), (0, 5), (5, 5)))
+        
+        # Lines sharing an endpoint
+        self.assertFalse(ShapeUtils.line_intersects((0, 0), (5, 5), (5, 5), (10, 10)))
+        
+        # Lines that touch but don't cross - the implementation doesn't count this as intersection
+        self.assertFalse(ShapeUtils.line_intersects((0, 0), (5, 5), (5, 5), (10, 0)))
+
 
 class TestMap(unittest.TestCase):
     """Test cases for the Map class."""
